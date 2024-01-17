@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <button v-on:click="update()">Mettre à jour les restaurants</button>
+        <button v-on:click="updateEmploye()">Mettre à jour les employés</button>
+
+        <table >
+            
+            <thead>
+                <tr>
+                    <td>Nos restos </td>
+                </tr>
+            </thead>
+            <tbody v-for="restaurant in restaurants" :key="restaurant.id">
+                <tr >
+                    <th>{{restaurant.name}}</th>
+                    <td>{{restaurant.city}} - {{restaurant.nbcouverts}} - Terrasse : {{restaurant.terrasse}} - Parking : {{restaurant.parking}} <a v-on:click="deleteRestaurant(restaurant.id)" style="color:rgb(60, 255, 0);font-size:25px;">X</a></td>
+                </tr >
+                <tr >
+                    <th> Employés</th>
+                    <td v-for="employe in restaurant.employes" :key="employe.id" 
+                    v-if="restaurant.id == employe.idResto"
+                    >  {{employe.first_name}} {{employe.last_name}} <a v-on:click="deleteEmploye(restaurant.id, employe.id)" style="color:red;font-size:25px;">X</a></td>
+                </tr>
+            </tbody>
+            
+        </table>
+        
+    </div>
+    <script>
+        let app = new Vue({
+            el: "#app",
+            data () {
+                return {
+                restaurants :[],
+                
+            },
+        },
+            methods: {
+
+                update() {
+                    axios.get("http://127.0.0.1:5000/restaurants")
+                        .then(res => {
+                        this.restaurants = res.data
+                        .map(restaurant => {
+                            return { ...restaurant, employes: [] };
+                        });
+
+                        const restaurantIds = this.restaurants.map(restaurant =>restaurant.id);
+
+                        
+                        this.updateEmployes(restaurantIds);
+                    });
+                },
+                updateEmployes(restaurantIds) {
+                    restaurantIds.forEach(restaurantId => {
+                        axios.get("http://127.0.0.1:5000/restaurants/"+ restaurantId +"/employes")
+                        .then(res => {
+                            const restaurant = this.restaurants.find(restaurant => restaurant.id === restaurantId);
+                            if (restaurant) {
+                                restaurant.employes = res.data;
+                                console.log(restaurantIds)
+                            }
+                        })
+                        .catch(error => {
+                            console.error(error);
+                        });
+                    });
+                    },
+
+                // update(){
+                    
+                //     axios.get("http://127.0.0.1:5000/restaurants")
+                //     .then(res => {
+                //         this.restaurants = res.data;
+                //     }) 
+                //     this.restaurants.forEach((this.restaurants.id) =>
+                //         idResto = this.restaurants.id
+                //     );
+                //         // for (let i=0;i<this.restaurants.length;i++){
+                //             //     var idResto = this.restaurants[i].id;
+                //             //     console.log(idResto)                        
+                //             axios.get("http://127.0.0.1:5000/restaurants/"+idResto +"/employes") 
+                            
+                //             .then(resp => {
+                //                 // console.log("resp.data")
+                //             // console.log(resp.data)
+                //             this.employes = resp.data
+                //         }) 
+                //     }                  
+                // },
+                
+                // updateEmploye(){
+                    
+                    
+                //     for (let i=0;i<this.restaurants.length;i++){
+                //         var idResto = this.restaurants[i].id;
+                //         console.log(idResto)                        
+                //         axios.get("http://127.0.0.1:5000/restaurants/"+idResto +"/employes") 
+                        
+                //         .then(resp => {
+                //             // console.log("resp.data")
+                //             // console.log(resp.data)
+                //             this.employes = resp.data
+                //         })
+                //         // console.log(this.employes)
+                //     }
+                //     // console.log(this.employes)
+                // },
+                deleteEmploye(restaurantid, employeid){
+                   
+                    console.log(restaurantid)
+                    console.log(employeid)
+                    axios.delete('http://127.0.0.1:5000/restaurants/'+ restaurantid +'/employes/'+ employeid)
+                },
+                deleteRestaurant(restaurantid){
+                    console.log(restaurantid)
+                    axios.delete('http://127.0.0.1:5000/restaurants/'+ restaurantid)
+                }
+            }
+        })
+    </script>
+
+</body>
